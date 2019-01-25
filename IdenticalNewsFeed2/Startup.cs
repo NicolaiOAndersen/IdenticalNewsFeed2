@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using IdenticalNewsFeed2.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Entities.Data;
 
 namespace IdenticalNewsFeed2
 {
@@ -32,6 +33,11 @@ namespace IdenticalNewsFeed2
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+
+            services.AddDbContext<NewsDBContext>(options =>
+            {
+                options.UseSqlServer("Server = (localdb)\\mssqllocaldb; Database = aspnet - IdenticalNewsFeed2 - 527E2606 - C77E - 45C2 - 8E87 - B0D0AB006F38; Trusted_Connection = True; MultipleActiveResultSets = true");
             });
 
             services.AddDbContext<ApplicationDbContext>(options =>
