@@ -7,23 +7,53 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Entities.Data;
 using Entities.Models;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace IdenticalNewsFeed2.Controllers
 {
     public class NewsController : Controller
     {
-        private readonly NewsDBContext _context;
+        //The client uses the data from the api
+        private readonly HttpClient _httpClient;
+        //This is the base Uri for the api
+        private Uri BaseEndPoint { get; set; }
 
         public NewsController(NewsDBContext context)
         {
-            _context = context;
+            //This is the base path for the api.
+            BaseEndPoint = new Uri("http://localhost:54095/api/News");
+            //This sets up the new client.
+            _httpClient = new HttpClient();
         }
+
 
         // GET: News
         public async Task<IActionResult> Index()
         {
-            return View(await _context.news.ToListAsync());
+            //Response uses the client to read data from the api. 
+            var response = await _httpClient.GetAsync(BaseEndPoint, HttpCompletionOption.ResponseHeadersRead);
+            //this throws a response if exception, this is especially important because of concurrency.
+            response.EnsureSuccessStatusCode();
+            //This turns the response body into a string.
+            var data = await response.Content.ReadAsStringAsync();
+
+            return View(JsonConvert.DeserializeObject<List<News>>(data));
         }
+
+        // GET: News for viewers
+        public async Task<IActionResult> ViewNews()
+        {
+            //Response uses the client to read data from the api. 
+            var response = await _httpClient.GetAsync(BaseEndPoint, HttpCompletionOption.ResponseHeadersRead);
+            //this throws a response if exception, this is especially important because of concurrency.
+            response.EnsureSuccessStatusCode();
+            //This turns the response body into a string.
+            var data = await response.Content.ReadAsStringAsync();
+
+            return View(JsonConvert.DeserializeObject<List<News>>(data));
+        }
+
 
         // GET: News/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -32,9 +62,14 @@ namespace IdenticalNewsFeed2.Controllers
             {
                 return NotFound();
             }
+            var response = await _httpClient.GetAsync(BaseEndPoint.ToString() + id, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
 
-            var news = await _context.news
-                .FirstOrDefaultAsync(m => m.NewsId == id);
+            var data = await response.Content.ReadAsStringAsync();
+
+            //this makes the Info from the clien readable. -- double check
+            var news = JsonConvert.DeserializeObject<News>(data);
+
             if (news == null)
             {
                 return NotFound();
@@ -42,6 +77,7 @@ namespace IdenticalNewsFeed2.Controllers
 
             return View(news);
         }
+
 
         // GET: News/Create
         public IActionResult Create()
@@ -58,8 +94,11 @@ namespace IdenticalNewsFeed2.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(news);
-                await _context.SaveChangesAsync();
+                //This tells the api to post the data as Json.
+                var response = await _httpClient.PostAsJsonAsync<News>(BaseEndPoint, news);
+
+                response.EnsureSuccessStatusCode();
+
                 return RedirectToAction(nameof(Index));
             }
             return View(news);
@@ -73,14 +112,18 @@ namespace IdenticalNewsFeed2.Controllers
                 return NotFound();
             }
 
-            var news = await _context.news.FindAsync(id);
+            var response = await _httpClient.GetAsync(BaseEndPoint + $"/{id}", HttpCompletionOption.ResponseHeadersRead);
+            //now it turns the response body into a string
+            var data = await response.Content.ReadAsStringAsync();
+
+            var news = JsonConvert.DeserializeObject<News>(data);
+
             if (news == null)
             {
                 return NotFound();
             }
             return View(news);
         }
-
         // POST: News/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -97,12 +140,13 @@ namespace IdenticalNewsFeed2.Controllers
             {
                 try
                 {
-                    _context.Update(news);
-                    await _context.SaveChangesAsync();
+                    var response = await _httpClient.PutAsJsonAsync<News>(BaseEndPoint + $"/{id}", news);
+                    response.EnsureSuccessStatusCode();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!NewsExists(news.NewsId))
+                    //needs to be !await as the method is async.
+                    if (!await NewsExists(news.NewsId))
                     {
                         return NotFound();
                     }
@@ -117,37 +161,19 @@ namespace IdenticalNewsFeed2.Controllers
         }
 
         // GET: News/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        //You can't silence the truth!
+
+        private async Task<bool> NewsExists(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var news = await _context.news
-                .FirstOrDefaultAsync(m => m.NewsId == id);
-            if (news == null)
-            {
-                return NotFound();
-            }
+            var response = await _httpClient.GetAsync(BaseEndPoint, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
 
-            return View(news);
-        }
+            var data = await response.Content.ReadAsStringAsync();
+            //the context is being made into a list of news.
+            var context = JsonConvert.DeserializeObject<List<News>>(data);
 
-        // POST: News/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var news = await _context.news.FindAsync(id);
-            _context.news.Remove(news);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool NewsExists(int id)
-        {
-            return _context.news.Any(e => e.NewsId == id);
+            return context.Any(e => e.NewsId == id);
         }
     }
 }

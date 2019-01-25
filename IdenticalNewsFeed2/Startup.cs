@@ -63,6 +63,7 @@ namespace IdenticalNewsFeed2
                 app.UseHsts();
             }
 
+            //app.UseMiddleware<IpLogger>();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
