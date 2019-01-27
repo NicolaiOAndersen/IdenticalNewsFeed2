@@ -48,6 +48,31 @@ namespace API.Controllers
             return Ok(news);
         }
 
+        // GET: api/News/2019/1/2019/10
+        [HttpGet("{startYear}/{startMonth}/{endYear}/{endMonth}")]
+        public async Task<IActionResult> GetNewsByDate 
+            ([FromRoute] int startYear, [FromRoute] int startMonth, [FromRoute] int endYear, [FromRoute] int endMonth)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            DateTime startDate = new DateTime(startYear, startMonth, 1);
+            DateTime endDate = new DateTime(endYear, endMonth, 28);
+            //Jeg sætter endDate til den 28 da det er den kortest mulige måned, dog så kunne følgende måske virke:
+            //new DateTime(endYear, endMonth, DateTime.MaxValue.Month)
+
+            var news = _context.news.Where(item => item.UpdatedDate >= startDate && item.UpdatedDate <= endDate);
+
+            if (news == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(news);
+        }
+
+
         // PUT: api/News/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutNews([FromRoute] int id, [FromBody] News news)

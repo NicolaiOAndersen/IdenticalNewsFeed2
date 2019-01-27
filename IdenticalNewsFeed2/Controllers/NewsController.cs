@@ -54,6 +54,22 @@ namespace IdenticalNewsFeed2.Controllers
             return View(JsonConvert.DeserializeObject<List<News>>(data));
         }
 
+        //This does not work, but the api side works.
+        // GET: News for viewers by Date
+        //public async Task<IActionResult> 
+        //    ViewNews([FromRoute] int startYear, [FromRoute] int startMonth, [FromRoute] int endYear, [FromRoute] int endMonth)
+        //{
+        //    //Response uses the client to read data from the api. 
+        //    var response = await _httpClient.GetAsync(
+        //        BaseEndPoint + $"/{startYear}/{startMonth}/{endYear}/{endMonth}", HttpCompletionOption.ResponseHeadersRead);
+        //    //this throws a response if exception, this is especially important because of concurrency.
+        //    response.EnsureSuccessStatusCode();
+        //    //This turns the response body into a string.
+        //    var data = await response.Content.ReadAsStringAsync();
+
+        //    return View(JsonConvert.DeserializeObject<List<News>>(data));
+        //}
+
 
         // GET: News/Details/5
         public async Task<IActionResult> Details(int? id)
