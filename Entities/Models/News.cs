@@ -25,8 +25,8 @@ namespace Entities.Models
         public string HashTags { get; set; }
 
         //Optimistic concurrency, not done.
-        //[Timestamp]
-        //public Byte[] version { get; set; }
+        [Timestamp]
+        public Byte[] version { get; set; }
 
     }
 }
