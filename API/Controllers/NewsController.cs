@@ -28,6 +28,26 @@ namespace API.Controllers
             return _context.news;
         }
 
+
+        // GET: api/News/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Getnews([FromRoute] int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var news = await _context.news.FindAsync(id);
+
+            if(news == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(news);
+        }
+
         // PUT: api/News/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutNews([FromRoute] int id, [FromBody] News news)
