@@ -14,10 +14,10 @@ namespace Entities.Models
         public string Author { get; set; }
         //I choose to comment out the lenghts for testing purposes.
         [Required]
-        //[MinLength(10)]
+        [MinLength(10)]
         public string Title { get; set; }
         [Required]
-        //[MinLength(50)]
+        [MinLength(50)]
         public string Content { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
