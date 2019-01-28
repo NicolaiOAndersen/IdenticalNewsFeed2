@@ -87,6 +87,8 @@ namespace API.Controllers
                 return BadRequest();
             }
 
+            //I need to get the date from the context
+            
             //Datetime needs to be fixed.
             DateTime today = new DateTime();
             today = DateTime.Now;
